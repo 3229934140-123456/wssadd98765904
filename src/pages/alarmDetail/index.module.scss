@@ -26,6 +26,11 @@
   opacity: 0.9;
 }
 
+.alarmHeaderWarning {
+  background: linear-gradient(135deg, #ff7d00 0%, #ff9a3d 100%) !important;
+  box-shadow: 0 8rpx 24rpx rgba(255, 125, 0, 0.3) !important;
+}
+
 .alarmInfo {
   background: $color-bg-card;
   border-radius: $radius-lg;

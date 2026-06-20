@@ -23,6 +23,7 @@ const IndexPage: React.FC = () => {
     doorInfo,
     tempRecords,
     alarms,
+    currentAlarm,
     showAlarmPopup,
     handleAlarmReason,
     triggerAlarm,
@@ -49,12 +50,14 @@ const IndexPage: React.FC = () => {
   };
 
   const handleAlarmReasonSelect = (reason: AlarmReason) => {
+    const alarmId = currentAlarm?.id;
     handleAlarmReason(reason);
-    const pendingAlarm = getPendingAlarms()[0];
-    if (pendingAlarm) {
-      Taro.navigateTo({
-        url: `/pages/alarmDetail/index?id=${pendingAlarm.id}`
-      });
+    if (alarmId) {
+      setTimeout(() => {
+        Taro.navigateTo({
+          url: `/pages/alarmDetail/index?id=${alarmId}`
+        });
+      }, 100);
     }
   };
 
@@ -202,6 +205,7 @@ const IndexPage: React.FC = () => {
       <AlarmPopup
         visible={showAlarmPopup}
         doorInfo={doorInfo}
+        alarmType={doorInfo.status === 'open' ? 'open' : doorInfo.status === 'ajar' ? 'ajar' : 'open'}
         onSelectReason={handleAlarmReasonSelect}
       />
     </ScrollView>

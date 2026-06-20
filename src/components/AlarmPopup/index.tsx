@@ -5,27 +5,33 @@ import classnames from 'classnames'
 import type { AlarmReason, DoorInfo } from '@/types'
 import { formatTime } from '@/utils'
 import { useVibrate } from '@/hooks/useVibrate'
+import { useSpeech } from '@/hooks/useSpeech'
 import styles from './index.module.scss'
 
 interface AlarmPopupProps {
   visible: boolean
   doorInfo: DoorInfo
+  alarmType: 'open' | 'ajar'
   onSelectReason: (reason: AlarmReason) => void
 }
 
-const AlarmPopup: React.FC<AlarmPopupProps> = ({ visible, doorInfo, onSelectReason }) => {
+const AlarmPopup: React.FC<AlarmPopupProps> = ({ visible, doorInfo, alarmType, onSelectReason }) => {
   const { vibratePattern } = useVibrate()
+  const { speakAlarm, stop: stopSpeech } = useSpeech()
   
   useEffect(() => {
     if (visible) {
       vibratePattern([300, 100, 300, 100, 300, 100, 300])
-      const interval = setInterval(() => {
+      const vibrateInterval = setInterval(() => {
         vibratePattern([200, 100, 200])
       }, 3000)
       
+      const speechSuccess = speakAlarm(alarmType)
+      console.log('[AlarmPopup] Speech played:', speechSuccess)
+      
       try {
         Taro.showToast({
-          title: '车门异常开启！',
+          title: alarmType === 'open' ? '车门异常开启！' : '车门疑似虚掩！',
           icon: 'none',
           duration: 3000
         })
@@ -33,9 +39,12 @@ const AlarmPopup: React.FC<AlarmPopupProps> = ({ visible, doorInfo, onSelectReas
         console.error('[AlarmPopup] Toast error:', err)
       }
       
-      return () => clearInterval(interval)
+      return () => {
+        clearInterval(vibrateInterval)
+        stopSpeech()
+      }
     }
-  }, [visible, vibratePattern])
+  }, [visible, vibratePattern, speakAlarm, stopSpeech, alarmType])
   
   if (!visible) return null
   
@@ -44,15 +53,18 @@ const AlarmPopup: React.FC<AlarmPopupProps> = ({ visible, doorInfo, onSelectReas
     onSelectReason(reason)
   }
   
+  const titleText = alarmType === 'open' ? '车门异常开启' : '车门疑似虚掩'
+  const subtitleText = alarmType === 'open' ? '请立即选择原因并进行处理' : '请检查车门状态并选择原因'
+  
   return (
     <View className={styles.mask} catchMove>
-      <View className={styles.popup}>
+      <View className={classnames(styles.popup, alarmType === 'ajar' && styles.popupWarning)}>
         <View className={styles.header}>
-          <View className={styles.iconWrapper}>
-            <Text className={styles.icon}>🚨</Text>
+          <View className={classnames(styles.iconWrapper, alarmType === 'ajar' && styles.iconWrapperWarning)}>
+            <Text className={styles.icon}>{alarmType === 'open' ? '🚨' : '⚠️'}</Text>
           </View>
-          <Text className={styles.title}>车门异常开启</Text>
-          <Text className={styles.subtitle}>请立即选择原因并进行处理</Text>
+          <Text className={classnames(styles.title, alarmType === 'ajar' && styles.titleWarning)}>{titleText}</Text>
+          <Text className={styles.subtitle}>{subtitleText}</Text>
         </View>
         
         <View className={styles.infoSection}>

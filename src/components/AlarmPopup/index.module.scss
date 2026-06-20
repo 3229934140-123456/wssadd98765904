@@ -152,3 +152,17 @@
 .abnormalBtn {
   background: linear-gradient(135deg, #f53f3f 0%, #ff6b6b 100%);
 }
+
+.popupWarning {
+  .infoSection {
+    background: rgba(255, 125, 0, 0.08);
+  }
+}
+
+.iconWrapperWarning {
+  background: linear-gradient(135deg, #ff7d00 0%, #e66f00 100%) !important;
+}
+
+.titleWarning {
+  color: $color-door-ajar !important;
+}

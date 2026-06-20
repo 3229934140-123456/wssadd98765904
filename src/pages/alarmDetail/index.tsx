@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, Button, Textarea, Image, ScrollView } from '@tarojs/components';
-import Taro, { useDidShow, useRouter } from '@tarojs/taro';
+import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import classnames from 'classnames';
 import { useDoor } from '@/store/DoorContext';
 import PhotoStep from '@/components/PhotoStep';
@@ -20,7 +20,9 @@ const AlarmDetailPage: React.FC = () => {
   const router = useRouter();
   const { alarms, submitAlarmHandle } = useDoor();
   
-  const [alarm, setAlarm] = useState(alarms[0]);
+  const alarmId = router.params.id || '';
+  const initializedRef = useRef(false);
+  
   const [doorPhoto, setDoorPhoto] = useState('');
   const [sealPhoto, setSealPhoto] = useState('');
   const [envPhoto, setEnvPhoto] = useState('');
@@ -28,44 +30,37 @@ const AlarmDetailPage: React.FC = () => {
   const [remark, setRemark] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const alarm = useMemo(() => {
+    if (!alarmId) return alarms[0] || null;
+    const found = alarms.find(a => a.id === alarmId);
+    return found || null;
+  }, [alarms, alarmId]);
+
   useDidShow(() => {
-    const alarmId = router.params.id;
-    if (alarmId) {
-      const found = alarms.find(a => a.id === alarmId);
-      if (found) {
-        setAlarm(found);
-        console.log('[AlarmDetailPage] Loaded alarm:', found.id);
-        
-        if (found.photos) {
-          setDoorPhoto(found.photos.door);
-          setSealPhoto(found.photos.seal);
-          setEnvPhoto(found.photos.environment);
-        }
-        if (found.isRelocked !== undefined) {
-          setIsRelocked(found.isRelocked);
-        }
-        if (found.remark) {
-          setRemark(found.remark);
-        }
-      }
+    if (initializedRef.current) return;
+    if (!alarm) return;
+    
+    initializedRef.current = true;
+    
+    console.log('[AlarmDetailPage] Initialize with alarm:', alarm.id);
+    
+    if (alarm.photos) {
+      setDoorPhoto(alarm.photos.door);
+      setSealPhoto(alarm.photos.seal);
+      setEnvPhoto(alarm.photos.environment);
+    }
+    if (alarm.isRelocked !== undefined) {
+      setIsRelocked(alarm.isRelocked);
+    }
+    if (alarm.remark) {
+      setRemark(alarm.remark);
     }
   });
 
-  useEffect(() => {
-    if (alarm?.status === 'resolved') {
-      setIsRelocked(alarm.isRelocked ?? null);
-      setRemark(alarm.remark ?? '');
-      if (alarm.photos) {
-        setDoorPhoto(alarm.photos.door);
-        setSealPhoto(alarm.photos.seal);
-        setEnvPhoto(alarm.photos.environment);
-      }
-    }
-  }, [alarm]);
-
   const getAlarmTitle = () => {
-    if (alarm?.type === 'open') return '车门异常开启';
-    if (alarm?.type === 'ajar') return '车门疑似虚掩';
+    if (!alarm) return '';
+    if (alarm.type === 'open') return '车门异常开启';
+    if (alarm.type === 'ajar') return '车门疑似虚掩';
     return '温度异常';
   };
 
@@ -79,7 +74,8 @@ const AlarmDetailPage: React.FC = () => {
   };
 
   const canSubmit = () => {
-    if (alarm?.status === 'resolved') return false;
+    if (!alarm) return false;
+    if (alarm.status === 'resolved') return false;
     return doorPhoto && sealPhoto && envPhoto && isRelocked !== null;
   };
 
@@ -138,8 +134,10 @@ const AlarmDetailPage: React.FC = () => {
 
   return (
     <ScrollView scrollY className={styles.container}>
-      <View className={styles.alarmHeader}>
-        <Text className={styles.alarmType}>🚨 {getAlarmTitle()}</Text>
+      <View className={classnames(styles.alarmHeader, alarm.type === 'ajar' && styles.alarmHeaderWarning)}>
+        <Text className={styles.alarmType}>
+          {alarm.type === 'open' ? '🚨' : '⚠️'} {getAlarmTitle()}
+        </Text>
         <Text className={styles.alarmTime}>{formatTime(alarm.occurTime)}</Text>
       </View>
 
@@ -167,8 +165,10 @@ const AlarmDetailPage: React.FC = () => {
           <Text className={styles.infoValue}>{alarm.location}</Text>
         </View>
         <View className={styles.infoRow}>
-          <Text className={styles.infoLabel}>车辆编号</Text>
-          <Text className={styles.infoValue}>{alarm.doorId}</Text>
+          <Text className={styles.infoLabel}>告警ID</Text>
+          <Text className={styles.infoValue} style={{ fontSize: 24, color: '#86909c' }}>
+            {alarm.id}
+          </Text>
         </View>
       </View>
 

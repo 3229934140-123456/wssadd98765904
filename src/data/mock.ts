@@ -75,23 +75,31 @@ export const mockReviews: ReviewRecord[] = [
   {
     id: 'review-001',
     doorId: 'door-001',
+    vehicleNo: '京A·88888',
     reviewer: '李站长',
     reviewTime: '2026-06-20 08:30:00',
     doorStatus: 'closed',
     sealStatus: 'intact',
+    compareResult: 'consistent',
     photos: {
       door: 'https://picsum.photos/id/3/600/800',
       seal: 'https://picsum.photos/id/6/600/800'
     },
-    remark: '门磁状态正常，封签完好，准许卸货'
+    lastAlarmPhotos: {
+      door: 'https://picsum.photos/id/9/600/800',
+      seal: 'https://picsum.photos/id/1/600/800'
+    },
+    remark: '门磁状态正常，封签完好，与上次处置记录一致，准许卸货'
   },
   {
     id: 'review-002',
     doorId: 'door-001',
+    vehicleNo: '京A·88888',
     reviewer: '王调度',
     reviewTime: '2026-06-19 19:45:00',
     doorStatus: 'closed',
     sealStatus: 'intact',
+    compareResult: 'consistent',
     photos: {
       door: 'https://picsum.photos/id/9/600/800',
       seal: 'https://picsum.photos/id/1/600/800'

@@ -45,13 +45,19 @@ export interface SealInfo {
 export interface ReviewRecord {
   id: string
   doorId: string
+  vehicleNo: string
   reviewer: string
   reviewTime: string
   doorStatus: DoorStatus
   sealStatus: 'intact' | 'broken'
+  compareResult: 'consistent' | 'inconsistent'
   photos: {
     door: string
     seal: string
+  }
+  lastAlarmPhotos?: {
+    seal: string
+    door: string
   }
   remark: string
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import type { DoorInfo, TempRecord, AlarmRecord, ReviewRecord, AlarmReason } from '@/types'
 import { mockDoorInfo, mockTempRecords, mockAlarms, mockReviews } from '@/data/mock'
 import { generateId } from '@/utils'
@@ -17,6 +17,7 @@ interface DoorContextType {
   submitAlarmHandle: (alarmId: string, data: Partial<AlarmRecord>) => boolean
   submitReview: (data: Omit<ReviewRecord, 'id' | 'reviewTime'>) => boolean
   getPendingAlarms: () => AlarmRecord[]
+  getLastResolvedAlarm: () => AlarmRecord | undefined
 }
 
 const DoorContext = createContext<DoorContextType | null>(null)
@@ -28,8 +29,12 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [reviews, setReviews] = useState<ReviewRecord[]>(mockReviews)
   const [currentAlarm, setCurrentAlarm] = useState<AlarmRecord | null>(null)
   const [showAlarmPopup, setShowAlarmPopup] = useState(false)
+  const prevStatusRef = useRef<DoorInfo['status']>(mockDoorInfo.status)
+  const alarmTriggeredRef = useRef<Set<string>>(new Set())
 
   const triggerAlarm = useCallback((type: 'open' | 'ajar') => {
+    const alarmKey = `${type}-${Date.now()}`
+    
     const newAlarm: AlarmRecord = {
       id: generateId(),
       doorId: doorInfo.id,
@@ -43,6 +48,7 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAlarms(prev => [newAlarm, ...prev])
     setCurrentAlarm(newAlarm)
     setShowAlarmPopup(true)
+    alarmTriggeredRef.current.add(newAlarm.id)
     
     if (type === 'open') {
       setDoorInfo(prev => ({ ...prev, status: 'open', lastOpenTime: new Date().toISOString() }))
@@ -50,7 +56,8 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setDoorInfo(prev => ({ ...prev, status: 'ajar' }))
     }
     
-    console.log('[DoorContext] Alarm triggered:', newAlarm)
+    console.log('[DoorContext] Alarm triggered:', newAlarm.id, type)
+    return newAlarm
   }, [doorInfo.id, doorInfo.currentLocation])
 
   const handleAlarmReason = useCallback((reason: AlarmReason) => {
@@ -65,18 +72,50 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentAlarm(prev => prev ? { ...prev, reason, status: 'processing' as const } : null)
     setShowAlarmPopup(false)
     
-    console.log('[DoorContext] Alarm reason selected:', reason)
+    console.log('[DoorContext] Alarm reason selected:', currentAlarm.id, reason)
   }, [currentAlarm])
 
   const updateDoorStatus = useCallback((status: DoorInfo['status']) => {
+    const prevStatus = prevStatusRef.current
+    prevStatusRef.current = status
+    
     setDoorInfo(prev => ({
       ...prev,
       status,
       lastCloseTime: status === 'closed' ? new Date().toISOString() : prev.lastCloseTime,
       lastOpenTime: status === 'open' ? new Date().toISOString() : prev.lastOpenTime
     }))
-    console.log('[DoorContext] Door status updated:', status)
+    
+    console.log('[DoorContext] Door status updated:', prevStatus, '->', status)
   }, [])
+
+  useEffect(() => {
+    const prevStatus = prevStatusRef.current
+    
+    if (doorInfo.isMoving && prevStatus === 'closed' && doorInfo.status !== 'closed') {
+      const type = doorInfo.status === 'open' ? 'open' : 'ajar'
+      console.log('[DoorContext] Auto trigger alarm: moving + door status changed to', type)
+      
+      const newAlarm: AlarmRecord = {
+        id: generateId(),
+        doorId: doorInfo.id,
+        type,
+        level: type === 'open' ? 'danger' : 'warning',
+        occurTime: new Date().toISOString(),
+        location: doorInfo.currentLocation,
+        status: 'pending'
+      }
+      
+      setAlarms(prev => [newAlarm, ...prev])
+      setCurrentAlarm(newAlarm)
+      setShowAlarmPopup(true)
+      alarmTriggeredRef.current.add(newAlarm.id)
+      
+      console.log('[DoorContext] Auto alarm created:', newAlarm.id)
+    }
+    
+    prevStatusRef.current = doorInfo.status
+  }, [doorInfo.status, doorInfo.isMoving, doorInfo.id, doorInfo.currentLocation])
 
   const submitAlarmHandle = useCallback((alarmId: string, data: Partial<AlarmRecord>): boolean => {
     try {
@@ -122,14 +161,9 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return alarms.filter(a => a.status === 'pending')
   }, [alarms])
 
-  useEffect(() => {
-    if (doorInfo.isMoving && doorInfo.status !== 'closed') {
-      const timer = setTimeout(() => {
-        console.log('[DoorContext] Simulating door open alarm while moving')
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [doorInfo.isMoving, doorInfo.status])
+  const getLastResolvedAlarm = useCallback(() => {
+    return alarms.find(a => a.status === 'resolved' && a.photos)
+  }, [alarms])
 
   return (
     <DoorContext.Provider value={{
@@ -145,7 +179,8 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateDoorStatus,
       submitAlarmHandle,
       submitReview,
-      getPendingAlarms
+      getPendingAlarms,
+      getLastResolvedAlarm
     }}>
       {children}
     </DoorContext.Provider>
