@@ -15,6 +15,14 @@ export interface TempRecord {
   temperature: number
 }
 
+export interface TimelineEvent {
+  type: 'status_change' | 'reason_select' | 'photo_taken' | 'lock_confirm' | 'submit_handle' | 'review_compare'
+  title: string
+  description?: string
+  operator?: string
+  time: string
+}
+
 export interface AlarmRecord {
   id: string
   doorId: string
@@ -33,6 +41,7 @@ export interface AlarmRecord {
   handler?: string
   handleTime?: string
   remark?: string
+  timeline?: TimelineEvent[]
 }
 
 export interface SealInfo {

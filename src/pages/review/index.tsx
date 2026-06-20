@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, Button, Image, Textarea, ScrollView } from '@tarojs/components';
+import React, { useState, useMemo } from 'react';
+import { View, Text, Button, Image, Textarea, ScrollView, Input } from '@tarojs/components';
 import Taro, { usePullDownRefresh, useDidShow } from '@tarojs/taro';
 import classnames from 'classnames';
 import { useDoor } from '@/store/DoorContext';
@@ -27,6 +27,10 @@ const ReviewPage: React.FC = () => {
   const [sealPhoto, setSealPhoto] = useState('');
   const [lastAlarm, setLastAlarm] = useState<AlarmRecord | undefined>();
   const [refreshing, setRefreshing] = useState(false);
+  
+  const [filterVehicleNo, setFilterVehicleNo] = useState('');
+  const [filterAlarmId, setFilterAlarmId] = useState('');
+  const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
 
   useDidShow(() => {
     console.log('[ReviewPage] Page showed');
@@ -42,6 +46,18 @@ const ReviewPage: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     setRefreshing(false);
     Taro.stopPullDownRefresh();
+  };
+
+  const filteredReviews = useMemo(() => {
+    return reviews.filter(r => {
+      if (filterVehicleNo && !r.vehicleNo.includes(filterVehicleNo)) return false;
+      if (filterAlarmId && (!r.lastAlarmId || !r.lastAlarmId.includes(filterAlarmId))) return false;
+      return true;
+    });
+  }, [reviews, filterVehicleNo, filterAlarmId]);
+
+  const toggleExpand = (reviewId: string) => {
+    setExpandedReviewId(prev => prev === reviewId ? null : reviewId);
   };
 
   const handleScan = async () => {
@@ -459,108 +475,168 @@ const ReviewPage: React.FC = () => {
           <Text className={styles.sectionTitle}>历史复核记录</Text>
         </View>
 
-        {reviews.length > 0 ? (
+        <View className={styles.filterBar}>
+          <View className={styles.filterItem}>
+            <Text className={styles.filterLabel}>车辆号</Text>
+            <Input
+              className={styles.filterInput}
+              placeholder='输入车辆号'
+              value={filterVehicleNo}
+              onInput={(e) => setFilterVehicleNo(e.detail.value)}
+            />
+          </View>
+          <View className={styles.filterItem}>
+            <Text className={styles.filterLabel}>告警ID</Text>
+            <Input
+              className={styles.filterInput}
+              placeholder='输入告警ID'
+              value={filterAlarmId}
+              onInput={(e) => setFilterAlarmId(e.detail.value)}
+            />
+          </View>
+        </View>
+
+        {filteredReviews.length > 0 ? (
           <View className={styles.reviewList}>
-            {reviews.map((review) => (
-              <View key={review.id} className={styles.reviewItem}>
-                <View className={styles.reviewHeader}>
-                  <View>
-                    <Text className={styles.reviewer}>{review.vehicleNo}</Text>
-                    <Text className={styles.reviewTime}>
-                      复核人：{review.reviewer} · {formatTimeRelative(review.reviewTime)}
-                    </Text>
-                  </View>
-                  <StatusBadge
-                    text={review.compareResult === 'consistent' ? '一致' : '不一致'}
-                    color={review.compareResult === 'consistent' ? '#00b42a' : '#f53f3f'}
-                  />
-                </View>
-                <View className={styles.reviewStatus}>
-                  <View className={styles.reviewStatusGroup}>
-                    <Text className={styles.reviewStatusLabel}>现场</Text>
-                    <StatusBadge
-                      text={getDoorStatusText(review.doorStatus)}
-                      color={getDoorStatusColor(review.doorStatus)}
-                    />
-                    <StatusBadge
-                      text={getSealStatusText(review.sealStatus)}
-                      color={getSealStatusColor(review.sealStatus)}
-                    />
-                  </View>
-                  {review.lastDoorStatus && (
-                    <View className={styles.reviewStatusGroup}>
-                      <Text className={styles.reviewStatusLabel}>上次</Text>
+            {filteredReviews.map((review) => {
+              const isExpanded = expandedReviewId === review.id;
+              return (
+                <View key={review.id} className={styles.reviewItem}>
+                  <View
+                    className={styles.reviewHeader}
+                    onClick={() => toggleExpand(review.id)}
+                  >
+                    <View>
+                      <Text className={styles.reviewer}>{review.vehicleNo}</Text>
+                      <Text className={styles.reviewTime}>
+                        复核人：{review.reviewer} · {formatTimeRelative(review.reviewTime)}
+                      </Text>
+                    </View>
+                    <View className={styles.reviewHeaderRight}>
                       <StatusBadge
-                        text={getDoorStatusText(review.lastDoorStatus)}
-                        color={getDoorStatusColor(review.lastDoorStatus)}
+                        text={review.compareResult === 'consistent' ? '一致' : '不一致'}
+                        color={review.compareResult === 'consistent' ? '#00b42a' : '#f53f3f'}
+                      />
+                      <Text className={classnames(styles.expandIcon, isExpanded && styles.expandIconOpen)}>›</Text>
+                    </View>
+                  </View>
+                  <View className={styles.reviewStatus}>
+                    <View className={styles.reviewStatusGroup}>
+                      <Text className={styles.reviewStatusLabel}>现场</Text>
+                      <StatusBadge
+                        text={getDoorStatusText(review.doorStatus)}
+                        color={getDoorStatusColor(review.doorStatus)}
+                      />
+                      <StatusBadge
+                        text={getSealStatusText(review.sealStatus)}
+                        color={getSealStatusColor(review.sealStatus)}
                       />
                     </View>
-                  )}
-                </View>
-                
-                {review.lastAlarmPhotos && (
-                  <View className={styles.reviewCompare}>
-                    <View className={styles.reviewCompareLabel}>
-                      <Text className={styles.reviewCompareLabelText}>封签照片对比</Text>
+                    {review.lastDoorStatus && (
+                      <View className={styles.reviewStatusGroup}>
+                        <Text className={styles.reviewStatusLabel}>上次</Text>
+                        <StatusBadge
+                          text={getDoorStatusText(review.lastDoorStatus)}
+                          color={getDoorStatusColor(review.lastDoorStatus)}
+                        />
+                      </View>
+                    )}
+                  </View>
+                  
+                  {isExpanded && (
+                    <View className={styles.expandedContent}>
+                      <View className={styles.expandInfoRow}>
+                        <Text className={styles.expandInfoLabel}>复核时间</Text>
+                        <Text className={styles.expandInfoValue}>{formatTime(review.reviewTime)}</Text>
+                      </View>
                       {review.lastAlarmId && (
-                        <Text className={styles.reviewCompareSubLabel}>
-                          告警：{review.lastAlarmId}
+                        <View className={styles.expandInfoRow}>
+                          <Text className={styles.expandInfoLabel}>关联告警</Text>
+                          <Text className={styles.expandInfoValue}>{review.lastAlarmId}</Text>
+                        </View>
+                      )}
+                      <View className={styles.expandInfoRow}>
+                        <Text className={styles.expandInfoLabel}>对比结果</Text>
+                        <Text
+                          className={styles.expandInfoValue}
+                          style={{ color: review.compareResult === 'consistent' ? '#00b42a' : '#f53f3f', fontWeight: 600 }}
+                        >
+                          {review.compareResult === 'consistent' ? '封签状态一致' : '封签状态不一致'}
                         </Text>
+                      </View>
+                      
+                      {review.lastAlarmPhotos && (
+                        <View className={styles.reviewCompare}>
+                          <View className={styles.reviewCompareLabel}>
+                            <Text className={styles.reviewCompareLabelText}>封签照片对比</Text>
+                          </View>
+                          <View className={styles.reviewComparePhotos}>
+                            <View className={styles.reviewComparePhoto} onClick={() => handlePreviewImage(review.lastAlarmPhotos!.seal)}>
+                              <Image
+                                className={styles.image}
+                                src={review.lastAlarmPhotos.seal}
+                                mode='aspectFill'
+                              />
+                              <Text className={styles.reviewComparePhotoLabel}>上次</Text>
+                            </View>
+                            <View className={styles.reviewCompareArrow}>
+                              <Text>→</Text>
+                            </View>
+                            <View className={styles.reviewComparePhoto} onClick={() => handlePreviewImage(review.photos.seal)}>
+                              <Image
+                                className={styles.image}
+                                src={review.photos.seal}
+                                mode='aspectFill'
+                              />
+                              <Text className={styles.reviewComparePhotoLabel}>现场</Text>
+                            </View>
+                          </View>
+                        </View>
+                      )}
+                      
+                      {!review.lastAlarmPhotos && (
+                        <View className={styles.reviewPhotos}>
+                          <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.photos.door)}>
+                            <Image
+                              className={styles.image}
+                              src={review.photos.door}
+                              mode='aspectFill'
+                            />
+                            <Text className={styles.reviewComparePhotoLabel}>车门</Text>
+                          </View>
+                          <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.photos.seal)}>
+                            <Image
+                              className={styles.image}
+                              src={review.photos.seal}
+                              mode='aspectFill'
+                            />
+                            <Text className={styles.reviewComparePhotoLabel}>封签</Text>
+                          </View>
+                        </View>
+                      )}
+                      
+                      {review.remark && (
+                        <View className={styles.expandInfoRow}>
+                          <Text className={styles.expandInfoLabel}>复核备注</Text>
+                          <Text className={styles.expandInfoValue}>{review.remark}</Text>
+                        </View>
                       )}
                     </View>
-                    <View className={styles.reviewComparePhotos}>
-                      <View className={styles.reviewComparePhoto}>
-                        <Image
-                          className={styles.image}
-                          src={review.lastAlarmPhotos.seal}
-                          mode='aspectFill'
-                        />
-                        <Text className={styles.reviewComparePhotoLabel}>上次</Text>
-                      </View>
-                      <View className={styles.reviewCompareArrow}>
-                        <Text>→</Text>
-                      </View>
-                      <View className={styles.reviewComparePhoto}>
-                        <Image
-                          className={styles.image}
-                          src={review.photos.seal}
-                          mode='aspectFill'
-                        />
-                        <Text className={styles.reviewComparePhotoLabel}>现场</Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
-                
-                {!review.lastAlarmPhotos && (
-                  <View className={styles.reviewPhotos}>
-                    <View className={styles.reviewPhoto}>
-                      <Image
-                        className={styles.image}
-                        src={review.photos.door}
-                        mode='aspectFill'
-                      />
-                    </View>
-                    <View className={styles.reviewPhoto}>
-                      <Image
-                        className={styles.image}
-                        src={review.photos.seal}
-                        mode='aspectFill'
-                      />
-                    </View>
-                  </View>
-                )}
-                
-                {review.remark && (
-                  <Text className={styles.reviewRemark}>{review.remark}</Text>
-                )}
-              </View>
-            ))}
+                  )}
+                  
+                  {!isExpanded && review.remark && (
+                    <Text className={styles.reviewRemark}>{review.remark}</Text>
+                  )}
+                </View>
+              );
+            })}
           </View>
         ) : (
           <View className={styles.emptyState}>
             <Text className={styles.emptyIcon}>📋</Text>
-            <Text className={styles.emptyText}>暂无复核记录</Text>
+            <Text className={styles.emptyText}>
+              {reviews.length === 0 ? '暂无复核记录' : '没有符合筛选条件的记录'}
+            </Text>
           </View>
         )}
       </View>

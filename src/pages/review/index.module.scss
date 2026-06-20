@@ -140,6 +140,81 @@
   margin-bottom: $spacing-md;
 }
 
+.reviewHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.expandIcon {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  transition: transform $transition-base;
+  transform: rotate(90deg);
+}
+
+.expandIconOpen {
+  transform: rotate(-90deg);
+}
+
+.filterBar {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.filterItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.filterLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.filterInput {
+  height: 64rpx;
+  background: $color-bg-card;
+  border: 1rpx solid $color-divider;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.expandedContent {
+  margin-top: $spacing-sm;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.expandInfoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $spacing-md;
+}
+
+.expandInfoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex-shrink: 0;
+}
+
+.expandInfoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  text-align: right;
+  flex: 1;
+  line-height: 1.5;
+}
+
 .reviewer {
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;

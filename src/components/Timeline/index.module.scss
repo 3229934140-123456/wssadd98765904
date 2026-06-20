@@ -1,0 +1,95 @@
+@import '@/styles/theme';
+
+.container {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-lg;
+}
+
+.title {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+}
+
+.item {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 56rpx;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(22, 93, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dotIcon {
+  font-size: $font-size-sm;
+}
+
+.line {
+  width: 2rpx;
+  flex: 1;
+  background: $color-divider;
+  margin: $spacing-xs 0;
+  min-height: 40rpx;
+}
+
+.rightCol {
+  flex: 1;
+  padding-bottom: $spacing-lg;
+  min-width: 0;
+
+  :global .item:last-child & {
+    padding-bottom: 0;
+  }
+}
+
+.eventHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.eventTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.eventTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.eventDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+  line-height: 1.5;
+}
+
+.eventOperator {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

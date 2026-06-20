@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import dayjs from 'dayjs';
@@ -18,6 +18,15 @@ import {
 } from '@/utils';
 import styles from './index.module.scss';
 
+type AlarmFilter = 'all' | 'pending' | 'processing' | 'resolved';
+
+const filterTabs: { value: AlarmFilter; label: string }[] = [
+  { value: 'all', label: '全部' },
+  { value: 'pending', label: '待处理' },
+  { value: 'processing', label: '处理中' },
+  { value: 'resolved', label: '已处理' }
+];
+
 const IndexPage: React.FC = () => {
   const {
     doorInfo,
@@ -32,6 +41,7 @@ const IndexPage: React.FC = () => {
   } = useDoor();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [alarmFilter, setAlarmFilter] = useState<AlarmFilter>('all');
 
   useDidShow(() => {
     console.log('[IndexPage] Page showed');
@@ -105,7 +115,10 @@ const IndexPage: React.FC = () => {
 
   const currentTemp = tempRecords.length > 0 ? tempRecords[tempRecords.length - 1].temperature : 0;
   const pendingAlarms = getPendingAlarms();
-  const recentAlarms = alarms.slice(0, 3);
+  const filteredAlarms = useMemo(() => {
+    if (alarmFilter === 'all') return alarms.slice(0, 5);
+    return alarms.filter(a => a.status === alarmFilter).slice(0, 5);
+  }, [alarms, alarmFilter]);
   const greeting = dayjs().hour() < 6 ? '夜间行车注意安全' :
                    dayjs().hour() < 12 ? '上午好' :
                    dayjs().hour() < 18 ? '下午好' : '晚上好';
@@ -166,9 +179,41 @@ const IndexPage: React.FC = () => {
           <Text className={styles.actionBtn}>查看全部</Text>
         </View>
 
-        {recentAlarms.length > 0 ? (
+        <View className={styles.filterTabs}>
+          {filterTabs.map(tab => (
+            <View
+              key={tab.value}
+              className={[
+                styles.filterTab,
+                alarmFilter === tab.value ? styles.filterTabActive : ''
+              ].join(' ')}
+              onClick={() => setAlarmFilter(tab.value)}
+            >
+              <Text
+                className={[
+                  styles.filterTabText,
+                  alarmFilter === tab.value ? styles.filterTabTextActive : ''
+                ].join(' ')}
+              >
+                {tab.label}
+              </Text>
+              {tab.value !== 'all' && (
+                <View
+                  className={[
+                    styles.filterTabCount,
+                    alarmFilter === tab.value ? styles.filterTabCountActive : ''
+                  ].join(' ')}
+                >
+                  <Text>{alarms.filter(a => a.status === tab.value).length}</Text>
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+
+        {filteredAlarms.length > 0 ? (
           <View className={styles.alarmList}>
-            {recentAlarms.map((alarm) => (
+            {filteredAlarms.map((alarm) => (
               <View
                 key={alarm.id}
                 className={styles.alarmItem}

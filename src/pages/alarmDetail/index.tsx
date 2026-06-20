@@ -5,6 +5,7 @@ import classnames from 'classnames';
 import { useDoor } from '@/store/DoorContext';
 import PhotoStep from '@/components/PhotoStep';
 import StatusBadge from '@/components/StatusBadge';
+import Timeline from '@/components/Timeline';
 import {
   formatTime,
   getReasonText,
@@ -303,6 +304,10 @@ const AlarmDetailPage: React.FC = () => {
             />
           </View>
         </>
+      )}
+
+      {alarm.timeline && alarm.timeline.length > 0 && (
+        <Timeline events={alarm.timeline} />
       )}
 
       {!isResolved && (

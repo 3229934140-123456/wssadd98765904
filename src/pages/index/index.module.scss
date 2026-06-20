@@ -44,6 +44,65 @@
   color: $color-primary;
 }
 
+.filterTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  overflow-x: auto;
+  padding-bottom: $spacing-xs;
+}
+
+.filterTab {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  border: 1rpx solid transparent;
+  transition: all $transition-base;
+  flex-shrink: 0;
+}
+
+.filterTabActive {
+  background: rgba(22, 93, 255, 0.1);
+  border-color: rgba(22, 93, 255, 0.3);
+}
+
+.filterTabText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.filterTabTextActive {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.filterTabCount {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 $spacing-xs;
+  background: $color-bg-tertiary;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  :global & Text {
+    font-size: 20rpx;
+    color: $color-text-tertiary;
+  }
+}
+
+.filterTabCountActive {
+  background: $color-primary;
+
+  :global & Text {
+    color: $color-text-white;
+  }
+}
+
 .alarmList {
   display: flex;
   flex-direction: column;
