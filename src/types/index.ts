@@ -59,6 +59,8 @@ export interface ReviewRecord {
     seal: string
     door: string
   }
+  lastDoorStatus?: DoorStatus
+  lastAlarmId?: string
   remark: string
 }
 

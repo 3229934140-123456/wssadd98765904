@@ -106,6 +106,12 @@ const ReviewPage: React.FC = () => {
     });
   };
 
+  const getLastDoorStatus = (): DoorStatus | undefined => {
+    if (!lastAlarm) return undefined;
+    if (lastAlarm.isRelocked) return 'closed';
+    return lastAlarm.type === 'open' ? 'open' : 'ajar';
+  };
+
   const handleSubmit = () => {
     if (!doorPhoto || !sealPhoto) {
       Taro.showToast({ title: '请拍摄完整照片', icon: 'none' });
@@ -127,6 +133,8 @@ const ReviewPage: React.FC = () => {
         door: lastAlarm.photos.door,
         seal: lastAlarm.photos.seal
       } : undefined,
+      lastDoorStatus: getLastDoorStatus(),
+      lastAlarmId: lastAlarm?.id,
       remark
     });
 
@@ -190,10 +198,48 @@ const ReviewPage: React.FC = () => {
         </View>
       )}
 
+      {scanned && lastAlarm && (
+        <View className={styles.compareSection}>
+          <View className={styles.compareHeader}>
+            <Text className={styles.sectionTitle}>上次处置信息</Text>
+            <Text className={styles.compareSubtitle}>
+              告警ID：{lastAlarm.id}
+            </Text>
+          </View>
+
+          <View className={styles.lastAlarmInfo}>
+            <View className={styles.lastAlarmRow}>
+              <Text className={styles.lastAlarmLabel}>处置时间</Text>
+              <Text className={styles.lastAlarmValue}>
+                {formatTime(lastAlarm.handleTime || lastAlarm.occurTime)}
+              </Text>
+            </View>
+            <View className={styles.lastAlarmRow}>
+              <Text className={styles.lastAlarmLabel}>处理人</Text>
+              <Text className={styles.lastAlarmValue}>{lastAlarm.handler || '司机'}</Text>
+            </View>
+            <View className={styles.lastAlarmRow}>
+              <Text className={styles.lastAlarmLabel}>门磁状态</Text>
+              <StatusBadge
+                text={getDoorStatusText(getLastDoorStatus() || 'closed')}
+                color={getDoorStatusColor(getLastDoorStatus() || 'closed')}
+              />
+            </View>
+            <View className={styles.lastAlarmRow}>
+              <Text className={styles.lastAlarmLabel}>锁闭结果</Text>
+              <StatusBadge
+                text={lastAlarm.isRelocked ? '已重新锁闭' : '未锁闭'}
+                color={lastAlarm.isRelocked ? '#00b42a' : '#f53f3f'}
+              />
+            </View>
+          </View>
+        </View>
+      )}
+
       {scanned && lastAlarm?.photos && (
         <View className={styles.compareSection}>
           <View className={styles.compareHeader}>
-            <Text className={styles.sectionTitle}>封签对比</Text>
+            <Text className={styles.sectionTitle}>封签照片对比</Text>
             <StatusBadge
               text={compareResult === 'consistent' ? '状态一致' : '状态不一致'}
               color={compareResult === 'consistent' ? '#00b42a' : '#f53f3f'}
@@ -203,10 +249,7 @@ const ReviewPage: React.FC = () => {
           <View className={styles.compareGrid}>
             <View className={styles.compareItem}>
               <View className={styles.compareLabel}>
-                <Text className={styles.compareLabelText}>上次处置封签</Text>
-                <Text className={styles.compareLabelTime}>
-                  {formatTime(lastAlarm.handleTime || lastAlarm.occurTime)}
-                </Text>
+                <Text className={styles.compareLabelText}>上次封签照片</Text>
               </View>
               <View
                 className={styles.comparePhoto}
@@ -216,12 +259,6 @@ const ReviewPage: React.FC = () => {
                   className={styles.image}
                   src={lastAlarm.photos.seal}
                   mode='aspectFill'
-                />
-              </View>
-              <View className={styles.compareStatus}>
-                <StatusBadge
-                  text={lastAlarm.isRelocked ? '已重新锁闭' : '未锁闭'}
-                  color={lastAlarm.isRelocked ? '#00b42a' : '#f53f3f'}
                 />
               </View>
             </View>
@@ -258,17 +295,11 @@ const ReviewPage: React.FC = () => {
                   <Text className={styles.photoUploadText}>拍封签</Text>
                 </Button>
               )}
-              <View className={styles.compareStatus}>
-                <StatusBadge
-                  text={sealStatus === 'intact' ? '封签完好' : '封签破损'}
-                  color={sealStatus === 'intact' ? '#00b42a' : '#f53f3f'}
-                />
-              </View>
             </View>
           </View>
           
           <View className={styles.compareResultSection}>
-            <Text className={styles.formLabel}>对比结果</Text>
+            <Text className={styles.formLabel}>封签对比结果</Text>
             <View className={styles.radioGroup}>
               <View
                 className={classnames(styles.radioItem, compareResult === 'consistent' && styles.active)}
@@ -445,20 +476,37 @@ const ReviewPage: React.FC = () => {
                   />
                 </View>
                 <View className={styles.reviewStatus}>
-                  <StatusBadge
-                    text={getDoorStatusText(review.doorStatus)}
-                    color={getDoorStatusColor(review.doorStatus)}
-                  />
-                  <StatusBadge
-                    text={getSealStatusText(review.sealStatus)}
-                    color={getSealStatusColor(review.sealStatus)}
-                  />
+                  <View className={styles.reviewStatusGroup}>
+                    <Text className={styles.reviewStatusLabel}>现场</Text>
+                    <StatusBadge
+                      text={getDoorStatusText(review.doorStatus)}
+                      color={getDoorStatusColor(review.doorStatus)}
+                    />
+                    <StatusBadge
+                      text={getSealStatusText(review.sealStatus)}
+                      color={getSealStatusColor(review.sealStatus)}
+                    />
+                  </View>
+                  {review.lastDoorStatus && (
+                    <View className={styles.reviewStatusGroup}>
+                      <Text className={styles.reviewStatusLabel}>上次</Text>
+                      <StatusBadge
+                        text={getDoorStatusText(review.lastDoorStatus)}
+                        color={getDoorStatusColor(review.lastDoorStatus)}
+                      />
+                    </View>
+                  )}
                 </View>
                 
                 {review.lastAlarmPhotos && (
                   <View className={styles.reviewCompare}>
                     <View className={styles.reviewCompareLabel}>
-                      <Text className={styles.reviewCompareLabelText}>封签对比</Text>
+                      <Text className={styles.reviewCompareLabelText}>封签照片对比</Text>
+                      {review.lastAlarmId && (
+                        <Text className={styles.reviewCompareSubLabel}>
+                          告警：{review.lastAlarmId}
+                        </Text>
+                      )}
                     </View>
                     <View className={styles.reviewComparePhotos}>
                       <View className={styles.reviewComparePhoto}>

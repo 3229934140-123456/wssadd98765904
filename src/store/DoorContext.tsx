@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
-import type { DoorInfo, TempRecord, AlarmRecord, ReviewRecord, AlarmReason } from '@/types'
+import type { DoorInfo, TempRecord, AlarmRecord, ReviewRecord, AlarmReason, DoorStatus } from '@/types'
 import { mockDoorInfo, mockTempRecords, mockAlarms, mockReviews } from '@/data/mock'
 import { generateId } from '@/utils'
 
@@ -13,11 +13,12 @@ interface DoorContextType {
   setShowAlarmPopup: (show: boolean) => void
   triggerAlarm: (type: 'open' | 'ajar') => void
   handleAlarmReason: (reason: AlarmReason) => void
-  updateDoorStatus: (status: DoorInfo['status']) => void
+  updateDoorStatus: (status: DoorStatus) => void
   submitAlarmHandle: (alarmId: string, data: Partial<AlarmRecord>) => boolean
   submitReview: (data: Omit<ReviewRecord, 'id' | 'reviewTime'>) => boolean
   getPendingAlarms: () => AlarmRecord[]
   getLastResolvedAlarm: () => AlarmRecord | undefined
+  getAlarmById: (id: string) => AlarmRecord | undefined
 }
 
 const DoorContext = createContext<DoorContextType | null>(null)
@@ -29,12 +30,11 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [reviews, setReviews] = useState<ReviewRecord[]>(mockReviews)
   const [currentAlarm, setCurrentAlarm] = useState<AlarmRecord | null>(null)
   const [showAlarmPopup, setShowAlarmPopup] = useState(false)
-  const prevStatusRef = useRef<DoorInfo['status']>(mockDoorInfo.status)
-  const alarmTriggeredRef = useRef<Set<string>>(new Set())
+  
+  const prevStatusRef = useRef<DoorStatus>(mockDoorInfo.status)
+  const alarmCreatedForStatusRef = useRef<string>('')
 
-  const triggerAlarm = useCallback((type: 'open' | 'ajar') => {
-    const alarmKey = `${type}-${Date.now()}`
-    
+  const createAlarm = useCallback((type: 'open' | 'ajar') => {
     const newAlarm: AlarmRecord = {
       id: generateId(),
       doorId: doorInfo.id,
@@ -48,23 +48,59 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAlarms(prev => [newAlarm, ...prev])
     setCurrentAlarm(newAlarm)
     setShowAlarmPopup(true)
-    alarmTriggeredRef.current.add(newAlarm.id)
     
-    if (type === 'open') {
-      setDoorInfo(prev => ({ ...prev, status: 'open', lastOpenTime: new Date().toISOString() }))
-    } else {
-      setDoorInfo(prev => ({ ...prev, status: 'ajar' }))
-    }
+    alarmCreatedForStatusRef.current = newAlarm.id
     
-    console.log('[DoorContext] Alarm triggered:', newAlarm.id, type)
+    console.log('[DoorContext] Alarm created:', newAlarm.id, type, 'from status change')
     return newAlarm
   }, [doorInfo.id, doorInfo.currentLocation])
+
+  useEffect(() => {
+    const prevStatus = prevStatusRef.current
+    const currentStatus = doorInfo.status
+    
+    if (prevStatus === 'closed' && currentStatus !== 'closed') {
+      const type = currentStatus === 'open' ? 'open' : 'ajar'
+      createAlarm(type)
+    }
+    
+    prevStatusRef.current = currentStatus
+  }, [doorInfo.status, createAlarm])
+
+  const triggerAlarm = useCallback((type: 'open' | 'ajar') => {
+    console.log('[DoorContext] triggerAlarm called:', type)
+    
+    if (doorInfo.status === type) {
+      setDoorInfo(prev => ({ ...prev, status: 'closed' }))
+      setTimeout(() => {
+        setDoorInfo(prev => {
+          const now = new Date().toISOString()
+          return {
+            ...prev,
+            status: type as DoorStatus,
+            lastOpenTime: type === 'open' ? now : prev.lastOpenTime
+          }
+        })
+      }, 100)
+    } else {
+      setDoorInfo(prev => {
+        const now = new Date().toISOString()
+        return {
+          ...prev,
+          status: type as DoorStatus,
+          lastOpenTime: type === 'open' ? now : prev.lastOpenTime
+        }
+      })
+    }
+  }, [doorInfo.status])
 
   const handleAlarmReason = useCallback((reason: AlarmReason) => {
     if (!currentAlarm) return
     
+    const alarmId = currentAlarm.id
+    
     setAlarms(prev => prev.map(alarm => 
-      alarm.id === currentAlarm.id 
+      alarm.id === alarmId 
         ? { ...alarm, reason, status: 'processing' as const }
         : alarm
     ))
@@ -72,50 +108,18 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentAlarm(prev => prev ? { ...prev, reason, status: 'processing' as const } : null)
     setShowAlarmPopup(false)
     
-    console.log('[DoorContext] Alarm reason selected:', currentAlarm.id, reason)
+    console.log('[DoorContext] Alarm reason selected:', alarmId, reason)
   }, [currentAlarm])
 
-  const updateDoorStatus = useCallback((status: DoorInfo['status']) => {
-    const prevStatus = prevStatusRef.current
-    prevStatusRef.current = status
-    
+  const updateDoorStatus = useCallback((status: DoorStatus) => {
+    console.log('[DoorContext] updateDoorStatus:', status)
     setDoorInfo(prev => ({
       ...prev,
       status,
       lastCloseTime: status === 'closed' ? new Date().toISOString() : prev.lastCloseTime,
       lastOpenTime: status === 'open' ? new Date().toISOString() : prev.lastOpenTime
     }))
-    
-    console.log('[DoorContext] Door status updated:', prevStatus, '->', status)
   }, [])
-
-  useEffect(() => {
-    const prevStatus = prevStatusRef.current
-    
-    if (doorInfo.isMoving && prevStatus === 'closed' && doorInfo.status !== 'closed') {
-      const type = doorInfo.status === 'open' ? 'open' : 'ajar'
-      console.log('[DoorContext] Auto trigger alarm: moving + door status changed to', type)
-      
-      const newAlarm: AlarmRecord = {
-        id: generateId(),
-        doorId: doorInfo.id,
-        type,
-        level: type === 'open' ? 'danger' : 'warning',
-        occurTime: new Date().toISOString(),
-        location: doorInfo.currentLocation,
-        status: 'pending'
-      }
-      
-      setAlarms(prev => [newAlarm, ...prev])
-      setCurrentAlarm(newAlarm)
-      setShowAlarmPopup(true)
-      alarmTriggeredRef.current.add(newAlarm.id)
-      
-      console.log('[DoorContext] Auto alarm created:', newAlarm.id)
-    }
-    
-    prevStatusRef.current = doorInfo.status
-  }, [doorInfo.status, doorInfo.isMoving, doorInfo.id, doorInfo.currentLocation])
 
   const submitAlarmHandle = useCallback((alarmId: string, data: Partial<AlarmRecord>): boolean => {
     try {
@@ -126,6 +130,7 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ))
       
       if (data.isRelocked) {
+        prevStatusRef.current = 'closed'
         setDoorInfo(prev => ({ ...prev, status: 'closed', lastCloseTime: new Date().toISOString() }))
       }
       
@@ -133,7 +138,7 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentAlarm(null)
       }
       
-      console.log('[DoorContext] Alarm handled:', alarmId, data)
+      console.log('[DoorContext] Alarm handled:', alarmId, 'status: resolved')
       return true
     } catch (err) {
       console.error('[DoorContext] Submit alarm handle error:', err)
@@ -149,7 +154,7 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
         reviewTime: new Date().toISOString()
       }
       setReviews(prev => [newReview, ...prev])
-      console.log('[DoorContext] Review submitted:', newReview)
+      console.log('[DoorContext] Review submitted:', newReview.id)
       return true
     } catch (err) {
       console.error('[DoorContext] Submit review error:', err)
@@ -163,6 +168,10 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getLastResolvedAlarm = useCallback(() => {
     return alarms.find(a => a.status === 'resolved' && a.photos)
+  }, [alarms])
+
+  const getAlarmById = useCallback((id: string) => {
+    return alarms.find(a => a.id === id)
   }, [alarms])
 
   return (
@@ -180,7 +189,8 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
       submitAlarmHandle,
       submitReview,
       getPendingAlarms,
-      getLastResolvedAlarm
+      getLastResolvedAlarm,
+      getAlarmById
     }}>
       {children}
     </DoorContext.Provider>

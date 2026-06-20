@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import dayjs from 'dayjs';
 import { useDoor } from '@/store/DoorContext';
@@ -27,6 +27,7 @@ const IndexPage: React.FC = () => {
     showAlarmPopup,
     handleAlarmReason,
     triggerAlarm,
+    updateDoorStatus,
     getPendingAlarms
   } = useDoor();
 
@@ -81,6 +82,21 @@ const IndexPage: React.FC = () => {
     });
   };
 
+  const handleToggleDoorStatus = () => {
+    Taro.showActionSheet({
+      itemList: ['设置为关闭', '设置为开启', '设置为虚掩'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          updateDoorStatus('closed');
+        } else if (res.tapIndex === 1) {
+          updateDoorStatus('open');
+        } else {
+          updateDoorStatus('ajar');
+        }
+      }
+    });
+  };
+
   const goToReview = () => {
     Taro.switchTab({
       url: '/pages/review/index'
@@ -116,7 +132,7 @@ const IndexPage: React.FC = () => {
       </View>
 
       <View className={styles.section}>
-        <DoorStatusCard doorInfo={doorInfo} currentTemp={currentTemp} />
+        <DoorStatusCard doorInfo={doorInfo} currentTemp={currentTemp} onClick={handleToggleDoorStatus} />
       </View>
 
       <View className={styles.quickActions}>
@@ -162,6 +178,15 @@ const IndexPage: React.FC = () => {
                   className={styles.alarmLevel}
                   style={{ backgroundColor: getAlarmLevelColor(alarm.level) }}
                 />
+                {alarm.photos && alarm.status === 'resolved' && (
+                  <View className={styles.alarmThumbnail} onClick={(e) => e.stopPropagation()}>
+                    <Image
+                      className={styles.thumbnailImg}
+                      src={alarm.photos.seal}
+                      mode='aspectFill'
+                    />
+                  </View>
+                )}
                 <View className={styles.alarmContent}>
                   <Text className={styles.alarmTitle}>{getAlarmTitle(alarm)}</Text>
                   <View className={styles.alarmMeta}>
@@ -177,6 +202,14 @@ const IndexPage: React.FC = () => {
                       <Text style={{ color: '#86909c' }}>{getReasonText(alarm.reason)}</Text>
                     )}
                   </View>
+                  {alarm.status === 'resolved' && alarm.isRelocked !== undefined && (
+                    <View className={styles.alarmMeta}>
+                      <StatusBadge
+                        text={alarm.isRelocked ? '已重新锁闭' : '未锁闭'}
+                        color={alarm.isRelocked ? '#00b42a' : '#f53f3f'}
+                      />
+                    </View>
+                  )}
                   <Text className={styles.alarmMeta} style={{ marginTop: 8 }}>
                     {formatTimeRelative(alarm.occurTime)} · {alarm.location}
                   </Text>

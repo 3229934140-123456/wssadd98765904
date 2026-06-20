@@ -153,9 +153,22 @@
 
 .reviewStatus {
   display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.reviewStatusGroup {
+  display: flex;
   align-items: center;
-  gap: $spacing-md;
-  margin-bottom: $spacing-sm;
+  gap: $spacing-sm;
+}
+
+.reviewStatusLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  width: 60rpx;
+  flex-shrink: 0;
 }
 
 .reviewRemark {
@@ -362,6 +375,46 @@
   margin-bottom: $spacing-lg;
 }
 
+.compareSubtitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.lastAlarmInfo {
+  background: rgba(22, 93, 255, 0.06);
+  border-radius: $radius-md;
+  padding: $spacing-md $spacing-lg;
+}
+
+.lastAlarmRow {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid rgba(22, 93, 255, 0.1);
+  
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.lastAlarmLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  width: 140rpx;
+  flex-shrink: 0;
+}
+
+.lastAlarmValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  flex: 1;
+}
+
 .compareGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -467,6 +520,12 @@
 .reviewCompareLabelText {
   font-size: $font-size-sm;
   color: $color-text-secondary;
+}
+
+.reviewCompareSubLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-left: $spacing-sm;
 }
 
 .reviewComparePhotos {

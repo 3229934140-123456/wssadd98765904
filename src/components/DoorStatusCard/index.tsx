@@ -9,9 +9,10 @@ import styles from './index.module.scss'
 interface DoorStatusCardProps {
   doorInfo: DoorInfo
   currentTemp: number
+  onClick?: () => void
 }
 
-const DoorStatusCard: React.FC<DoorStatusCardProps> = ({ doorInfo, currentTemp }) => {
+const DoorStatusCard: React.FC<DoorStatusCardProps> = ({ doorInfo, currentTemp, onClick }) => {
   const statusText = getDoorStatusText(doorInfo.status)
   const statusColor = getDoorStatusColor(doorInfo.status)
   const tempColor = getTempStatusColor(currentTemp)
@@ -31,7 +32,7 @@ const DoorStatusCard: React.FC<DoorStatusCardProps> = ({ doorInfo, currentTemp }
   }
   
   return (
-    <View className={cardClass}>
+    <View className={cardClass} onClick={onClick}>
       <View className={styles.header}>
         <View className={styles.vehicleInfo}>
           <Text className={styles.vehicleNo}>{doorInfo.vehicleNo}</Text>

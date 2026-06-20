@@ -89,6 +89,8 @@ export const mockReviews: ReviewRecord[] = [
       door: 'https://picsum.photos/id/9/600/800',
       seal: 'https://picsum.photos/id/1/600/800'
     },
+    lastDoorStatus: 'closed',
+    lastAlarmId: 'alarm-001',
     remark: '门磁状态正常，封签完好，与上次处置记录一致，准许卸货'
   },
   {
