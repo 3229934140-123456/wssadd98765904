@@ -14,7 +14,8 @@ const eventIcons: Record<TimelineEvent['type'], string> = {
   photo_taken: '📷',
   lock_confirm: '🔒',
   submit_handle: '✅',
-  review_compare: '📋'
+  review_compare: '📋',
+  handover_note: '💬'
 }
 
 const Timeline: React.FC<TimelineProps> = ({ events }) => {

@@ -215,6 +215,16 @@
   line-height: 1.5;
 }
 
+.expandSectionTitle {
+  margin: $spacing-md 0 $spacing-sm 0;
+}
+
+.expandSectionTitleText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
 .reviewer {
   font-size: $font-size-md;
   font-weight: $font-weight-semibold;

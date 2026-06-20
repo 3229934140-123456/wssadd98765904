@@ -39,6 +39,12 @@
   color: $color-text-primary;
 }
 
+.sectionSubtitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-left: $spacing-sm;
+}
+
 .actionBtn {
   font-size: $font-size-sm;
   color: $color-primary;
@@ -101,6 +107,65 @@
   :global & Text {
     color: $color-text-white;
   }
+}
+
+.handoverCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.handoverHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.handoverVehicle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.handoverTotal {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.handoverStats {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.handoverStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-md;
+  background: $color-bg-tertiary;
+  border-radius: $radius-md;
+  transition: all $transition-base;
+  border: 2rpx solid transparent;
+}
+
+.handoverStatActive {
+  background: rgba(22, 93, 255, 0.1);
+  border-color: rgba(22, 93, 255, 0.3);
+}
+
+.handoverStatCount {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+}
+
+.handoverStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
 }
 
 .alarmList {

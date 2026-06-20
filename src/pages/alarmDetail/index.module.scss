@@ -229,6 +229,135 @@
   }
 }
 
+.handoverSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-lg;
+}
+
+.handoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.addNoteBtn {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.handoverNotesList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.handoverNoteItem {
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  border-left: 6rpx solid $color-primary;
+}
+
+.noteDriver {
+  background: rgba(22, 93, 255, 0.06);
+  border-left-color: $color-primary;
+}
+
+.noteReviewer {
+  background: rgba(0, 180, 42, 0.06);
+  border-left-color: #00b42a;
+}
+
+.noteHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.noteType {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.noteTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.noteOperator {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.noteContent {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: 1.6;
+}
+
+.handoverInputWrap {
+  margin-top: $spacing-md;
+}
+
+.handoverInput {
+  width: 100%;
+  min-height: 160rpx;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border: 1rpx solid $color-divider;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.handoverActions {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+}
+
+.cancelBtn {
+  flex: 1;
+  height: 80rpx;
+  background: $color-bg-tertiary !important;
+  color: $color-text-secondary !important;
+  border-radius: $radius-button !important;
+  font-size: $font-size-sm !important;
+  border: none !important;
+}
+
+.submitBtn {
+  flex: 1;
+  height: 80rpx;
+  background: $color-primary !important;
+  color: $color-text-white !important;
+  border-radius: $radius-button !important;
+  font-size: $font-size-sm !important;
+  border: none !important;
+  
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.emptyNotes {
+  padding: $spacing-lg 0;
+  text-align: center;
+}
+
+.emptyNotesText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
 .photoLabel {
   position: absolute;
   bottom: 0;

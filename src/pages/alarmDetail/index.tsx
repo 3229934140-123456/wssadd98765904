@@ -14,12 +14,12 @@ import {
   getAlarmStatusText,
   getAlarmStatusColor
 } from '@/utils';
-import type { AlarmReason } from '@/types';
+import type { AlarmReason, HandoverNote } from '@/types';
 import styles from './index.module.scss';
 
 const AlarmDetailPage: React.FC = () => {
   const router = useRouter();
-  const { alarms, submitAlarmHandle } = useDoor();
+  const { getAlarmWithTimeline, alarms, submitAlarmHandle, addHandoverNote, buildTimelineFromAlarm } = useDoor();
   
   const alarmId = router.params.id || '';
   const initializedRef = useRef(false);
@@ -30,12 +30,30 @@ const AlarmDetailPage: React.FC = () => {
   const [isRelocked, setIsRelocked] = useState<boolean | null>(null);
   const [remark, setRemark] = useState('');
   const [loading, setLoading] = useState(false);
+  const [handoverNote, setHandoverNote] = useState('');
+  const [showHandoverInput, setShowHandoverInput] = useState(false);
 
   const alarm = useMemo(() => {
-    if (!alarmId) return alarms[0] || null;
-    const found = alarms.find(a => a.id === alarmId);
+    if (!alarmId) {
+      const firstAlarm = alarms[0];
+      if (!firstAlarm) return null;
+      return {
+        ...firstAlarm,
+        timeline: buildTimelineFromAlarm(firstAlarm)
+      };
+    }
+    const found = getAlarmWithTimeline(alarmId);
     return found || null;
-  }, [alarms, alarmId]);
+  }, [alarms, alarmId, getAlarmWithTimeline, buildTimelineFromAlarm]);
+
+  const allTimeline = useMemo(() => {
+    if (!alarm) return [];
+    return buildTimelineFromAlarm(alarm);
+  }, [alarm, buildTimelineFromAlarm]);
+
+  const handoverNotes = useMemo(() => {
+    return alarm?.handoverNotes || [];
+  }, [alarm]);
 
   useDidShow(() => {
     if (initializedRef.current) return;
@@ -119,6 +137,24 @@ const AlarmDetailPage: React.FC = () => {
       urls: [url],
       current: url
     });
+  };
+
+  const handleAddHandoverNote = () => {
+    if (!handoverNote.trim() || !alarm) return;
+    
+    const success = addHandoverNote(alarm.id, {
+      type: 'driver',
+      content: handoverNote.trim(),
+      operator: '张师傅'
+    });
+    
+    if (success) {
+      Taro.showToast({ title: '备注已添加', icon: 'success' });
+      setHandoverNote('');
+      setShowHandoverInput(false);
+    } else {
+      Taro.showToast({ title: '添加失败', icon: 'none' });
+    }
   };
 
   if (!alarm) {
@@ -306,9 +342,82 @@ const AlarmDetailPage: React.FC = () => {
         </>
       )}
 
-      {alarm.timeline && alarm.timeline.length > 0 && (
-        <Timeline events={alarm.timeline} />
+      {allTimeline.length > 0 && (
+        <Timeline events={allTimeline} />
       )}
+
+      <View className={styles.handoverSection}>
+        <View className={styles.handoverHeader}>
+          <Text className={styles.sectionTitle}>交接备注</Text>
+          {!showHandoverInput && (
+            <Text
+              className={styles.addNoteBtn}
+              onClick={() => setShowHandoverInput(true)}
+            >
+              + 追加说明
+            </Text>
+          )}
+        </View>
+
+        {handoverNotes.length > 0 && (
+          <View className={styles.handoverNotesList}>
+            {handoverNotes.map((note) => (
+              <View
+                key={note.id}
+                className={classnames(
+                  styles.handoverNoteItem,
+                  note.type === 'driver' ? styles.noteDriver : styles.noteReviewer
+                )}
+              >
+                <View className={styles.noteHeader}>
+                  <Text className={styles.noteType}>
+                    {note.type === 'driver' ? '🚚 司机' : '📋 复核'}
+                  </Text>
+                  <Text className={styles.noteTime}>{formatTime(note.time)}</Text>
+                </View>
+                <Text className={styles.noteOperator}>{note.operator}</Text>
+                <Text className={styles.noteContent}>{note.content}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {showHandoverInput && (
+          <View className={styles.handoverInputWrap}>
+            <Textarea
+              className={styles.handoverInput}
+              placeholder='请输入交接说明，便于夜班交接追溯...'
+              value={handoverNote}
+              onInput={(e) => setHandoverNote(e.detail.value)}
+              maxlength={500}
+            />
+            <View className={styles.handoverActions}>
+              <Button
+                className={styles.cancelBtn}
+                onClick={() => {
+                  setShowHandoverInput(false);
+                  setHandoverNote('');
+                }}
+              >
+                取消
+              </Button>
+              <Button
+                className={styles.submitBtn}
+                onClick={handleAddHandoverNote}
+                disabled={!handoverNote.trim()}
+              >
+                提交
+              </Button>
+            </View>
+          </View>
+        )}
+
+        {!showHandoverInput && handoverNotes.length === 0 && (
+          <View className={styles.emptyNotes}>
+            <Text className={styles.emptyNotesText}>暂无交接备注，点击右上角"追加说明"添加</Text>
+          </View>
+        )}
+      </View>
 
       {!isResolved && (
         <View className={styles.bottomBar}>

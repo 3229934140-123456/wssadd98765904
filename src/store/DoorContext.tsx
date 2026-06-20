@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
-import type { DoorInfo, TempRecord, AlarmRecord, ReviewRecord, AlarmReason, DoorStatus, TimelineEvent } from '@/types'
+import type { DoorInfo, TempRecord, AlarmRecord, ReviewRecord, AlarmReason, DoorStatus, TimelineEvent, HandoverNote } from '@/types'
 import { mockDoorInfo, mockTempRecords, mockAlarms, mockReviews } from '@/data/mock'
-import { generateId, getDoorStatusText } from '@/utils'
+import { generateId, getDoorStatusText, getReasonText } from '@/utils'
 
 interface DoorContextType {
   doorInfo: DoorInfo
@@ -21,6 +21,9 @@ interface DoorContextType {
   getAlarmById: (id: string) => AlarmRecord | undefined
   addTimelineEvent: (alarmId: string, event: Omit<TimelineEvent, 'time'>) => void
   addAlarmTimeline: (alarmId: string, event: Omit<TimelineEvent, 'time'>) => void
+  getAlarmWithTimeline: (id: string) => AlarmRecord | undefined
+  buildTimelineFromAlarm: (alarm: AlarmRecord) => TimelineEvent[]
+  addHandoverNote: (alarmId: string, note: Omit<HandoverNote, 'id' | 'time'>) => boolean
 }
 
 const DoorContext = createContext<DoorContextType | null>(null)
@@ -264,6 +267,133 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return alarms.find(a => a.id === id)
   }, [alarms])
 
+  const buildTimelineFromAlarm = useCallback((alarm: AlarmRecord): TimelineEvent[] => {
+    if (alarm.timeline && alarm.timeline.length > 0) {
+      return alarm.timeline
+    }
+
+    const events: TimelineEvent[] = []
+
+    events.push({
+      type: 'status_change',
+      title: '门磁状态变更',
+      description: `变为${alarm.type === 'open' ? '车门开启' : '车门虚掩'}`,
+      operator: '设备同步',
+      time: alarm.occurTime
+    })
+
+    if (alarm.reason) {
+      const reasonTime = alarm.occurTime
+      events.push({
+        type: 'reason_select',
+        title: '告警原因选择',
+        description: getReasonText(alarm.reason),
+        operator: alarm.handler || '司机',
+        time: reasonTime
+      })
+    }
+
+    if (alarm.photos) {
+      const photoTime = alarm.handleTime || alarm.occurTime
+      events.push({
+        type: 'photo_taken',
+        title: '现场拍照取证',
+        description: '车门、封签、环境照片已上传',
+        operator: alarm.handler || '司机',
+        time: photoTime
+      })
+    }
+
+    if (alarm.isRelocked !== undefined) {
+      const lockTime = alarm.handleTime || alarm.occurTime
+      events.push({
+        type: 'lock_confirm',
+        title: '锁闭结果确认',
+        description: alarm.isRelocked ? '已重新锁闭车门' : '未锁闭车门',
+        operator: alarm.handler || '司机',
+        time: lockTime
+      })
+    }
+
+    if (alarm.status === 'resolved' && alarm.handleTime) {
+      events.push({
+        type: 'submit_handle',
+        title: '处置记录已提交',
+        description: alarm.remark || '处置完成',
+        operator: alarm.handler || '司机',
+        time: alarm.handleTime
+      })
+    }
+
+    const reviewForAlarm = reviews.find(r => r.lastAlarmId === alarm.id)
+    if (reviewForAlarm) {
+      events.push({
+        type: 'review_compare',
+        title: '到站复核完成',
+        description: `对比结果：${reviewForAlarm.compareResult === 'consistent' ? '一致' : '不一致'}，门磁状态：${getDoorStatusText(reviewForAlarm.doorStatus)}`,
+        operator: reviewForAlarm.reviewer,
+        time: reviewForAlarm.reviewTime
+      })
+    }
+
+    if (alarm.handoverNotes) {
+      alarm.handoverNotes.forEach(note => {
+        events.push({
+          type: 'handover_note',
+          title: note.type === 'driver' ? '司机交接说明' : '复核补充意见',
+          description: note.content,
+          operator: note.operator,
+          time: note.time
+        })
+      })
+    }
+
+    return events.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+  }, [reviews])
+
+  const getAlarmWithTimeline = useCallback((id: string): AlarmRecord | undefined => {
+    const alarm = alarms.find(a => a.id === id)
+    if (!alarm) return undefined
+    return {
+      ...alarm,
+      timeline: buildTimelineFromAlarm(alarm)
+    }
+  }, [alarms, buildTimelineFromAlarm])
+
+  const addHandoverNote = useCallback((alarmId: string, note: Omit<HandoverNote, 'id' | 'time'>): boolean => {
+    try {
+      const now = new Date().toISOString()
+      const newNote: HandoverNote = {
+        ...note,
+        id: generateId(),
+        time: now
+      }
+
+      const timelineEvent: TimelineEvent = {
+        type: 'handover_note',
+        title: note.type === 'driver' ? '司机交接说明' : '复核补充意见',
+        description: note.content,
+        operator: note.operator,
+        time: now
+      }
+
+      setAlarms(prev => prev.map(alarm => {
+        if (alarm.id !== alarmId) return alarm
+        return {
+          ...alarm,
+          handoverNotes: [...(alarm.handoverNotes || []), newNote],
+          timeline: [...(alarm.timeline || buildTimelineFromAlarm(alarm)), timelineEvent]
+        }
+      }))
+
+      console.log('[DoorContext] Handover note added:', alarmId, note.type)
+      return true
+    } catch (err) {
+      console.error('[DoorContext] Add handover note error:', err)
+      return false
+    }
+  }, [buildTimelineFromAlarm])
+
   return (
     <DoorContext.Provider value={{
       doorInfo,
@@ -282,7 +412,10 @@ export const DoorProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getLastResolvedAlarm,
       getAlarmById,
       addTimelineEvent,
-      addAlarmTimeline
+      addAlarmTimeline,
+      getAlarmWithTimeline,
+      buildTimelineFromAlarm,
+      addHandoverNote
     }}>
       {children}
     </DoorContext.Provider>

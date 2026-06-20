@@ -16,10 +16,18 @@ export interface TempRecord {
 }
 
 export interface TimelineEvent {
-  type: 'status_change' | 'reason_select' | 'photo_taken' | 'lock_confirm' | 'submit_handle' | 'review_compare'
+  type: 'status_change' | 'reason_select' | 'photo_taken' | 'lock_confirm' | 'submit_handle' | 'review_compare' | 'handover_note'
   title: string
   description?: string
   operator?: string
+  time: string
+}
+
+export interface HandoverNote {
+  id: string
+  type: 'driver' | 'reviewer'
+  content: string
+  operator: string
   time: string
 }
 
@@ -42,6 +50,7 @@ export interface AlarmRecord {
   handleTime?: string
   remark?: string
   timeline?: TimelineEvent[]
+  handoverNotes?: HandoverNote[]
 }
 
 export interface SealInfo {

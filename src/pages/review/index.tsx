@@ -564,55 +564,64 @@ const ReviewPage: React.FC = () => {
                           {review.compareResult === 'consistent' ? '封签状态一致' : '封签状态不一致'}
                         </Text>
                       </View>
-                      
+
+                      <View className={styles.expandSectionTitle}>
+                        <Text className={styles.expandSectionTitleText}>上次处置信息</Text>
+                      </View>
+                      <View className={styles.expandInfoRow}>
+                        <Text className={styles.expandInfoLabel}>门磁状态</Text>
+                        <StatusBadge
+                          text={review.lastDoorStatus ? getDoorStatusText(review.lastDoorStatus) : '无记录'}
+                          color={review.lastDoorStatus ? getDoorStatusColor(review.lastDoorStatus) : '#86909c'}
+                        />
+                      </View>
+
+                      <View className={styles.expandSectionTitle}>
+                        <Text className={styles.expandSectionTitleText}>现场照片</Text>
+                      </View>
+                      <View className={styles.reviewPhotos}>
+                        <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.photos.door)}>
+                          <Image
+                            className={styles.image}
+                            src={review.photos.door}
+                            mode='aspectFill'
+                          />
+                          <Text className={styles.reviewComparePhotoLabel}>车门</Text>
+                        </View>
+                        <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.photos.seal)}>
+                          <Image
+                            className={styles.image}
+                            src={review.photos.seal}
+                            mode='aspectFill'
+                          />
+                          <Text className={styles.reviewComparePhotoLabel}>封签</Text>
+                        </View>
+                      </View>
+
                       {review.lastAlarmPhotos && (
-                        <View className={styles.reviewCompare}>
-                          <View className={styles.reviewCompareLabel}>
-                            <Text className={styles.reviewCompareLabelText}>封签照片对比</Text>
+                        <>
+                          <View className={styles.expandSectionTitle}>
+                            <Text className={styles.expandSectionTitleText}>上次处置照片</Text>
                           </View>
-                          <View className={styles.reviewComparePhotos}>
-                            <View className={styles.reviewComparePhoto} onClick={() => handlePreviewImage(review.lastAlarmPhotos!.seal)}>
+                          <View className={styles.reviewPhotos}>
+                            <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.lastAlarmPhotos!.door)}>
+                              <Image
+                                className={styles.image}
+                                src={review.lastAlarmPhotos.door}
+                                mode='aspectFill'
+                              />
+                              <Text className={styles.reviewComparePhotoLabel}>车门</Text>
+                            </View>
+                            <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.lastAlarmPhotos!.seal)}>
                               <Image
                                 className={styles.image}
                                 src={review.lastAlarmPhotos.seal}
                                 mode='aspectFill'
                               />
-                              <Text className={styles.reviewComparePhotoLabel}>上次</Text>
-                            </View>
-                            <View className={styles.reviewCompareArrow}>
-                              <Text>→</Text>
-                            </View>
-                            <View className={styles.reviewComparePhoto} onClick={() => handlePreviewImage(review.photos.seal)}>
-                              <Image
-                                className={styles.image}
-                                src={review.photos.seal}
-                                mode='aspectFill'
-                              />
-                              <Text className={styles.reviewComparePhotoLabel}>现场</Text>
+                              <Text className={styles.reviewComparePhotoLabel}>封签</Text>
                             </View>
                           </View>
-                        </View>
-                      )}
-                      
-                      {!review.lastAlarmPhotos && (
-                        <View className={styles.reviewPhotos}>
-                          <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.photos.door)}>
-                            <Image
-                              className={styles.image}
-                              src={review.photos.door}
-                              mode='aspectFill'
-                            />
-                            <Text className={styles.reviewComparePhotoLabel}>车门</Text>
-                          </View>
-                          <View className={styles.reviewPhoto} onClick={() => handlePreviewImage(review.photos.seal)}>
-                            <Image
-                              className={styles.image}
-                              src={review.photos.seal}
-                              mode='aspectFill'
-                            />
-                            <Text className={styles.reviewComparePhotoLabel}>封签</Text>
-                          </View>
-                        </View>
+                        </>
                       )}
                       
                       {review.remark && (

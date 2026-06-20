@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, Image } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import dayjs from 'dayjs';
@@ -42,6 +42,8 @@ const IndexPage: React.FC = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [alarmFilter, setAlarmFilter] = useState<AlarmFilter>('all');
+  const [scrollTop, setScrollTop] = useState(0);
+  const alarmSectionRef = useRef<number>(0);
 
   useDidShow(() => {
     console.log('[IndexPage] Page showed');
@@ -119,6 +121,51 @@ const IndexPage: React.FC = () => {
     if (alarmFilter === 'all') return alarms.slice(0, 5);
     return alarms.filter(a => a.status === alarmFilter).slice(0, 5);
   }, [alarms, alarmFilter]);
+
+  const handoverSummary = useMemo(() => {
+    const vehicleMap = new Map<string, {
+      pending: number
+      processing: number
+      resolved: number
+      total: number
+    }>()
+
+    const addToMap = (vehicleNo: string, status: string) => {
+      if (!vehicleMap.has(vehicleNo)) {
+        vehicleMap.set(vehicleNo, { pending: 0, processing: 0, resolved: 0, total: 0 })
+      }
+      const stats = vehicleMap.get(vehicleNo)!
+      stats.total++
+      if (status === 'pending') stats.pending++
+      else if (status === 'processing') stats.processing++
+      else if (status === 'resolved') stats.resolved++
+    }
+
+    alarms.forEach(alarm => {
+      addToMap(doorInfo.vehicleNo, alarm.status)
+    })
+
+    const result: {
+      vehicleNo: string
+      pending: number
+      processing: number
+      resolved: number
+      total: number
+    }[] = []
+
+    vehicleMap.forEach((stats, vehicleNo) => {
+      result.push({ vehicleNo, ...stats })
+    })
+
+    return result.sort((a, b) => b.total - a.total)
+  }, [alarms, doorInfo.vehicleNo])
+
+  const handleSummaryClick = (filter: AlarmFilter) => {
+    setAlarmFilter(filter)
+    setScrollTop(600)
+    setTimeout(() => setScrollTop(-1), 100)
+  }
+
   const greeting = dayjs().hour() < 6 ? '夜间行车注意安全' :
                    dayjs().hour() < 12 ? '上午好' :
                    dayjs().hour() < 18 ? '下午好' : '晚上好';
@@ -136,6 +183,7 @@ const IndexPage: React.FC = () => {
       refresherEnabled
       refresherTriggered={refreshing}
       onRefresherRefresh={handleRefresh}
+      scrollTop={scrollTop > 0 ? scrollTop : undefined}
     >
       <View className={styles.greeting}>
         <Text className={styles.greetingTitle}>{greeting}，张师傅</Text>
@@ -171,6 +219,45 @@ const IndexPage: React.FC = () => {
 
       <View className={styles.section}>
         <TempChart records={tempRecords} />
+      </View>
+
+      <View className={styles.section}>
+        <View className={styles.sectionHeader}>
+          <Text className={styles.sectionTitle}>交接概览</Text>
+          <Text className={styles.sectionSubtitle}>今晚夜班进度</Text>
+        </View>
+        
+        {handoverSummary.map((vehicle) => (
+          <View key={vehicle.vehicleNo} className={styles.handoverCard}>
+            <View className={styles.handoverHeader}>
+              <Text className={styles.handoverVehicle}>{vehicle.vehicleNo}</Text>
+              <Text className={styles.handoverTotal}>共 {vehicle.total} 条</Text>
+            </View>
+            <View className={styles.handoverStats}>
+              <View
+                className={classnames(styles.handoverStat, alarmFilter === 'pending' && styles.handoverStatActive)}
+                onClick={() => handleSummaryClick('pending')}
+              >
+                <Text className={styles.handoverStatCount} style={{ color: '#f53f3f' }}>{vehicle.pending}</Text>
+                <Text className={styles.handoverStatLabel}>待处理</Text>
+              </View>
+              <View
+                className={classnames(styles.handoverStat, alarmFilter === 'processing' && styles.handoverStatActive)}
+                onClick={() => handleSummaryClick('processing')}
+              >
+                <Text className={styles.handoverStatCount} style={{ color: '#ff7d00' }}>{vehicle.processing}</Text>
+                <Text className={styles.handoverStatLabel}>处理中</Text>
+              </View>
+              <View
+                className={classnames(styles.handoverStat, alarmFilter === 'resolved' && styles.handoverStatActive)}
+                onClick={() => handleSummaryClick('resolved')}
+              >
+                <Text className={styles.handoverStatCount} style={{ color: '#00b42a' }}>{vehicle.resolved}</Text>
+                <Text className={styles.handoverStatLabel}>已完成</Text>
+              </View>
+            </View>
+          </View>
+        ))}
       </View>
 
       <View className={styles.section}>
