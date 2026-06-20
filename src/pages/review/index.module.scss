@@ -1,0 +1,348 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  min-height: 100vh;
+  padding: $spacing-lg $page-padding calc(#{$spacing-xl} + 100rpx);
+  background: linear-gradient(180deg, #eef3ff 0%, $color-bg-page 100%);
+}
+
+.scanSection {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-lg;
+  color: $color-text-white;
+  box-shadow: 0 8rpx 24rpx rgba(22, 93, 255, 0.3);
+}
+
+.scanTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-xs;
+}
+
+.scanDesc {
+  font-size: $font-size-sm;
+  opacity: 0.9;
+  margin-bottom: $spacing-lg;
+}
+
+.scanBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: $color-text-white;
+  border-radius: $radius-button;
+  color: $color-primary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+  
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.section {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statusCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+  
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.statusLabel {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  width: 180rpx;
+  flex-shrink: 0;
+}
+
+.statusValue {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.photoPreview {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+}
+
+.photoItem {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+  
+  .image {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.reviewItem {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.reviewer {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.reviewTime {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.reviewStatus {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.reviewRemark {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.reviewPhotos {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.reviewPhoto {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  
+  .image {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.reviewForm {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-lg;
+}
+
+.formTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-lg;
+}
+
+.formGroup {
+  margin-bottom: $spacing-lg;
+}
+
+.formLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.radioGroup {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.radioItem {
+  flex: 1;
+  padding: $spacing-md;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+  text-align: center;
+  transition: all $transition-base;
+  
+  &.active {
+    border-color: $color-primary;
+    background: rgba(22, 93, 255, 0.08);
+  }
+}
+
+.radioText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 160rpx;
+  padding: $spacing-md;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  background: $color-bg-page;
+  box-sizing: border-box;
+}
+
+.submitBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+  
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+  
+  &.disabled {
+    background: $color-text-disabled;
+  }
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+}
+
+.photoUploadBtn {
+  @include button-reset;
+  aspect-ratio: 1;
+  border: 2rpx dashed $color-border;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.photoUploadIcon {
+  font-size: 48rpx;
+  margin-bottom: $spacing-xs;
+}
+
+.photoUploadText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.photoPreviewItem {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: $radius-md;
+  overflow: hidden;
+  
+  .image {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .removeBtn {
+    position: absolute;
+    top: 8rpx;
+    right: 8rpx;
+    width: 40rpx;
+    height: 40rpx;
+    border-radius: $radius-round;
+    background: rgba(0, 0, 0, 0.6);
+    color: $color-text-white;
+    font-size: $font-size-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+}
+
+.emptyState {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 64rpx $spacing-xl;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}

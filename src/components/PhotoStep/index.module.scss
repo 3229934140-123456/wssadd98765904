@@ -1,0 +1,120 @@
+@use '@/styles/variables.scss' as *;
+
+.stepCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.stepNumber {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: $radius-round;
+  background: $color-primary;
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+  
+  &.completed {
+    background: $color-success;
+  }
+}
+
+.stepTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.stepHint {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+}
+
+.photoArea {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.photoBtn {
+  @include button-reset;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: $radius-md;
+  border: 2rpx dashed $color-border;
+  background: $color-bg-hover;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+  
+  &:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+.photoIcon {
+  font-size: 56rpx;
+  margin-bottom: $spacing-xs;
+}
+
+.photoText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.photoPreview {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+  
+  .image {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .removeBtn {
+    position: absolute;
+    top: 8rpx;
+    right: 8rpx;
+    width: 40rpx;
+    height: 40rpx;
+    border-radius: $radius-round;
+    background: rgba(0, 0, 0, 0.6);
+    color: $color-text-white;
+    font-size: $font-size-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+}
+
+.photoTip {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(22, 93, 255, 0.08);
+  border-radius: $radius-sm;
+}

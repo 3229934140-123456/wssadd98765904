@@ -1,0 +1,117 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+  
+  &.danger {
+    background: linear-gradient(135deg, rgba(245, 63, 63, 0.08) 0%, $color-bg-card 60%);
+  }
+  
+  &.warning {
+    background: linear-gradient(135deg, rgba(255, 125, 0, 0.08) 0%, $color-bg-card 60%);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+}
+
+.vehicleInfo {
+  flex: 1;
+}
+
+.vehicleNo {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+}
+
+.statusIcon {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72rpx;
+  color: $color-text-white;
+  
+  &.closed {
+    background: linear-gradient(135deg, #00b42a 0%, #009a23 100%);
+  }
+  
+  &.open {
+    background: linear-gradient(135deg, #f53f3f 0%, #d92b2b 100%);
+    animation: shake 0.5s ease-in-out infinite;
+  }
+  
+  &.ajar {
+    background: linear-gradient(135deg, #ff7d00 0%, #e66f00 100%);
+    animation: shake 0.5s ease-in-out infinite;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+.statusText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  margin-top: $spacing-sm;
+  text-align: center;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+  
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.infoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  width: 160rpx;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  flex: 1;
+  @include text-ellipsis;
+}
+
+.tempBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+}
